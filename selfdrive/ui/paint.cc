@@ -538,24 +538,43 @@ static void ui_draw_vision_event(UIState *s) {
     const int img_turn_size = 160*1.5*0.82;
     ui_draw_image(s->vg, viz_event_x - (img_turn_size / 4)+80, viz_event_y + bdr_is - 45, img_turn_size, img_turn_size, s->img_turn, 1.0f);
   } else {
-    // draw steering wheel
+   // draw steering wheel
     const int bg_wheel_size = 90;
     const int bg_wheel_x = viz_event_x + (viz_event_w-bg_wheel_size);
     const int bg_wheel_y = viz_event_y + (bg_wheel_size/2);
-    NVGcolor color = COLOR_BLACK_ALPHA(0);
-    if (s->status == STATUS_ENGAGED) {
-      color = COLOR_ENGAGED;
-    } else if (s->status == STATUS_WARNING) {
-      color = COLOR_OCHRE;
-    } else {
-      color = COLOR_ENGAGEABLE;
+    const int img_wheel_size = bg_wheel_size*1.5;
+    const int img_wheel_x = bg_wheel_x-(img_wheel_size/2);
+    const int img_wheel_y = bg_wheel_y-25;
+    const float img_rotation = s->scene.angleSteers/180*3.141592;
+    float img_wheel_alpha = 0.1f;
+    bool is_engaged = (s->status == STATUS_ENGAGED);
+    bool is_warning = (s->status == STATUS_WARNING);
+    bool is_engageable = s->scene.controls_state.getEngageable();
+    if (is_engaged || is_warning || is_engageable) {
+      nvgBeginPath(s->vg);
+      nvgCircle(s->vg, bg_wheel_x, (bg_wheel_y + (bdr_is*1.5)), bg_wheel_size);
+      if (is_engaged) {
+        nvgFillColor(s->vg, COLOR_ENGAGED);
+      } else if (is_warning) {
+        nvgFillColor(s->vg, COLOR_OCHRE);
+      } else if (is_engageable) {
+        nvgFillColor(s->vg, COLOR_ENGAGEABLE);
+      }
+      nvgFill(s->vg);
+      img_wheel_alpha = 1.0f;
     }
-
-    if (s->scene.controls_state.getEngageable()){
-      ui_draw_circle_image(s->vg, bg_wheel_x, bg_wheel_y, bg_wheel_size, s->img_wheel, color, 1.0f, bg_wheel_y - 25);
+    nvgSave(s->vg);
+    nvgTranslate(s->vg,bg_wheel_x,(bg_wheel_y + (bdr_is*1.5))); 
+    nvgRotate(s->vg,-img_rotation);
+    nvgBeginPath(s->vg);
+    NVGpaint imgPaint = nvgImagePattern(s->vg, img_wheel_x-bg_wheel_x, img_wheel_y-(bg_wheel_y + (bdr_is*1.5)),
+    img_wheel_size, img_wheel_size, 0, s->img_wheel, img_wheel_alpha);
+    nvgRect(s->vg, img_wheel_x-bg_wheel_x, img_wheel_y-(bg_wheel_y + (bdr_is*1.5)), img_wheel_size, img_wheel_size);
+    nvgFillPaint(s->vg, imgPaint);
+    nvgFill(s->vg);
+    nvgRestore(s->vg);
     }
-  }
-}
+  }     
 
 #ifdef SHOW_SPEEDLIMIT
 static void ui_draw_vision_map(UIState *s) {
@@ -821,7 +840,7 @@ static void bb_ui_draw_measures_right(UIState *s, int bb_x, int bb_y, int bb_w )
         val_color = COLOR_RED_ALPHA(200);
       }
       // steering is in degrees
-      snprintf(val_str, sizeof(val_str), "%.1f°",(scene->angleSteers));
+      snprintf(val_str, sizeof(val_str), "%.1f°",(s->scene.angleSteers));
 
       snprintf(uom_str, sizeof(uom_str), "");
     bb_h +=bb_ui_draw_measure(s,  val_str, uom_str, "핸들 조향각",
@@ -846,7 +865,7 @@ static void bb_ui_draw_measures_right(UIState *s, int bb_x, int bb_y, int bb_w )
         val_color = COLOR_WHITE_ALPHA(200);
       }
       // steering is in degrees
-      snprintf(val_str, sizeof(val_str), "%.1f°",(scene->angleSteersDes));
+      snprintf(val_str, sizeof(val_str), "%.1f°",(s->scene.angleSteersDes));
     } else {
        snprintf(val_str, sizeof(val_str), "-");
     }
