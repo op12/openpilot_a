@@ -60,7 +60,6 @@ def process_hud_alert(enabled, fingerprint, visual_alert, left_lane,
 
   return sys_warning, sys_state, left_lane_warning, right_lane_warning
 
-
 class CarController():
   def __init__(self, dbc_name, CP, VM):
     self.car_fingerprint = CP.carFingerprint
@@ -122,9 +121,8 @@ class CarController():
 
     # Disable steering while turning blinker on and speed below 60 kph
     if CS.out.leftBlinker or CS.out.rightBlinker:
-      #if self.car_fingerprint not in [CAR.KIA_OPTIMA, CAR.KIA_OPTIMA_H]:
-      self.turning_signal_timer = 100  # Disable for 1.0 Seconds after blinker turned off
-    elif CS.left_blinker_flash or CS.right_blinker_flash: # Optima has blinker flash signal only
+      self.turning_signal_timer = 100
+    elif CS.left_blinker_flash or CS.right_blinker_flash:
       self.turning_signal_timer = 100
     
     if self.turning_indicator_alert: # set and clear by interface
